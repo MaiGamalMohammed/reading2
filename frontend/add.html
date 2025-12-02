@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>إضافة كتاب</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/styles/style.css">
+</head>
+
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">نظام القراءة</a>
+            <div>
+                <a class="btn btn-light btn-sm" href="index.html">الرئيسية</a>
+                <button id="logoutBtn2" class="btn btn-secondary btn-sm">خروج</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="card p-4 shadow-sm">
+            <h3 class="text-center mb-3">إضافة كتاب جديد</h3>
+            <form id="addForm">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">اسم الكتاب</label>
+                        <input id="title" type="text" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">اسم المؤلف</label>
+                        <input id="author" type="text" class="form-control" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">سنة الإصدار</label>
+                        <input id="year" type="number" class="form-control" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">عدد الصفحات</label>
+                        <input id="pages" type="number" class="form-control" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">الفئة (Category)</label>
+                        <input id="category" type="text" class="form-control"
+                            placeholder="مثال: رواية، تطوير ذاتي، تقنية">
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label">حالة القراءة</label>
+                        <select id="status" class="form-select" required>
+                            <option value="">اختر الحالة</option>
+                            <option>مكتمل</option>
+                            <option>قيد القراءة</option>
+                            <option>أريد قراءته</option>
+                        </select>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label">ملاحظات</label>
+                        <textarea id="notes" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label">صورة الغلاف</label>
+                        <input id="image" type="file" class="form-control" accept="image/*">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">التقييم من 1 إلى 10</label>
+                        <input id="rating" type="number" min="1" max="10" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">إضافة اقتباس (اختياري)</label>
+                        <div class="input-group">
+                            <input id="quoteInput" type="text" class="form-control"
+                                placeholder="اكتب اقتباس واضغط إضافة">
+                            <button id="addQuoteBtn" class="btn btn-outline-secondary" type="button">إضافة</button>
+                        </div>
+                        <ul id="quotesList" class="list-group mt-2"></ul>
+                    </div>
+
+                    <div class="col-12 text-center mt-3">
+                        <button class="btn btn-primary px-4" type="submit">إضافة</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="./assets/js/main_auth.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,13 @@
+body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'Helvetica Neue', Arial;
+    direction: rtl;
+    background: #f7f9fb;
+}
+
+.card {
+    border-radius: 10px;
+}
+
+.table img {
+    border-radius: 6px;
+}
