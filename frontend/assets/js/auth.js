@@ -1,3 +1,20 @@
+async function fetchCategories() {
+  try {
+    const response = await fetch("https://localhost:4000/api/category",
+        {
+        method: "GET",
+        credentials: "include"}
+    ); // your backend endpoint
+    const categories = await response.json();
+    return categories ;
+  } catch (error) {
+    console.error("Error loading categories:", error);
+    return [] ;
+  }
+}
+
+ 
+
 if(localStorage.getItem('user')){
     window.location.href = "./index.html"
     console.log("yse")
@@ -27,7 +44,7 @@ if (document.getElementById('registerForm')) {
         const data =   Object.fromEntries(formData)
     
         
-       let response = await fetch("http://localhost:4000/api/user",
+       let response = await fetch("https://localhost:4000/api/user",
             {
                 method:'POST',
                 headers:{
@@ -63,9 +80,10 @@ if (document.getElementById('loginForm')) {
         const data =   Object.fromEntries(formData)
     
         
-       let response = await fetch("http://localhost:4000/api/login",
+       let response = await fetch("https://localhost:4000/api/login",
             {
                 method:'POST',
+                credentials: "include",
                 headers:{
                     'Content-Type':'application/json'
                 },
@@ -78,6 +96,10 @@ if (document.getElementById('loginForm')) {
         document.getElementById('loginMsg').innerHTML=`*${result.error}`     
     }
     else{
+        let categoryData = await fetchCategories()
+        localStorage.setItem("categories", JSON.stringify(categoryData));
+
+
         localStorage.setItem('user',JSON.stringify(result))
          
         window.location.href = './index.html'

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>قائمة الكتب</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/styles/style.css">
+</head>
+
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">نظام القراءة</a>
+            <div>
+                <a class="btn btn-light btn-sm" href="index.html">الرئيسية</a>
+                <button id="logoutBtn2" class="btn btn-secondary btn-sm">خروج</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container w-50 mt-4">
+        <div class="card p-4 shadow-sm">
+            <h3 class="text-center mb-3">إضافةاقتباس</h3>
+            <form id="addFormQuote">
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <label class="form-label"> الاقتباس</label>
+                        <textarea id="text" type="text" name="text" class="form-control" rows="3"></textarea>
+                    </div>
+                     
+                    <div class="col-md-4">
+                        <label class="form-label">الصفحه</label>
+                        <input id="page_number" type="number" name="page_number" class="form-control" required>
+                    </div>
+                   
+                   
+                    
+                    <div class="col-md-12">
+                        <label class="form-label">تعليقك</label>
+                        <input id="comment" type="text" name="comment" class="form-control" >
+                    </div>
+                    
+                    
+
+                    <div class="col-12 text-center mt-3">
+                        <button class="btn btn-secondary px-4" type="submit">إضافة</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="./assets/js/main_auth.js"></script>
+</body>
+</html>

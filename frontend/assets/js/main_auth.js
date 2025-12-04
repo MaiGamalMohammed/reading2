@@ -1,7 +1,48 @@
-let books = JSON.parse(localStorage.getItem("books") || "[]");
+let categories = JSON.parse(localStorage.getItem("categories") || "[]");
 
-function saveBooks() {
-    localStorage.setItem("books", JSON.stringify(books));
+async function makeGetReq(url) {
+    let response = await fetch(url,{
+        method:"get",
+        credentials:'include'
+    })
+    let result = await response.json()
+    return result
+}
+
+async function getBooks() {
+   
+    var books = await makeGetReq("https://localhost:4000/api/books")
+    return books
+}
+
+var books;
+
+async function makePostReq(url,data){
+    let response = await fetch(`${url}`,{
+        method:"post",
+        credentials:"include",
+        headers:{
+            "content-type":"application/json"
+        },
+        body:JSON.stringify(data)
+    })
+
+    let result = await response.json()
+    return result
+}
+
+async function makePutReq(url,data){
+    let response = await fetch(`${url}`,{
+        method:"put",
+        credentials:"include",
+        headers:{
+            "content-type":"application/json"
+        },
+        body:JSON.stringify(data)
+    })
+
+    let result = await response.json()
+    return result
 }
 
 function requireLogin() {
@@ -10,11 +51,16 @@ function requireLogin() {
     return user;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async() => {
     const onIndex = !!document.getElementById('bookTable');
-    const onAdd = !!document.getElementById('addForm');
     const onBook = !!document.getElementById('bookCard');
+    const onBookEdit = document.getElementById('editForm')
+    const onQuoteAdd = document.getElementById('addFormQuote')
+    const onQuoteUpdate = document.getElementById('updateFormQuote')
+    const onRatingAdd = document.getElementById("addFormRating")
 
+    books = await getBooks()
+     
     const user = requireLogin();
     if (!user) return;
 
@@ -30,60 +76,62 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (onIndex) initIndex();
-    if (onAdd) initAdd();
-    if (onBook) initBook();
+    if (onBook) await initBook();
+    if(onBookEdit) editBook();
+    if(onQuoteAdd) await addQuote();
+    if(onQuoteUpdate) await updateQuote();
+    if(onRatingAdd) await addRating()
 });
 
 function initIndex() {
-    populateCategoryFilter();
+    loadCategories('filterCategory');
     renderBooks();
     document.getElementById('search').onkeyup = renderBooks;
     document.getElementById('filterStatus').onchange = renderBooks;
     document.getElementById('filterCategory').onchange = renderBooks;
 }
 
-function populateCategoryFilter() {
-    const sel = document.getElementById('filterCategory');
-    const cats = Array.from(new Set(books.map(b => b.category).filter(Boolean)));
-    sel.innerHTML = '<option value="">كل الفئات</option>';
-    cats.forEach(c => {
+function loadCategories(id) {
+    const sel = document.getElementById(`${id}`);
+    
+    categories.forEach(c => {
         let opt = document.createElement('option');
-        opt.value = c;
-        opt.textContent = c;
+        opt.value = c.id;
+        opt.textContent = c.name;
         sel.appendChild(opt);
     });
 }
 
 function renderBooks() {
-    const user = localStorage.getItem('currentUser');
+     
     const table = document.getElementById('bookTable');
     const search = document.getElementById('search').value.toLowerCase();
     const fs = document.getElementById('filterStatus').value;
     const fc = document.getElementById('filterCategory').value;
 
     table.innerHTML = '';
-    books
-        .filter(b => {
-            const mine = b.owner === user;
-            const match = (b.title || '').toLowerCase().includes(search) || (b.author || '').toLowerCase().includes(search);
-            const statusOk = !fs || b.status === fs;
-            const catOk = !fc || b.category === fc;
-            return mine && match && statusOk && catOk;
-        })
+    books.filter(b=> (!fc||b.category_id==fc)&&(!fs||b.status)&&(!search||b.name==search || b.author == search))
         .forEach((b, i) => {
+             
             const tr = document.createElement('tr');
             tr.innerHTML = `
-<td><img src="${b.image || 'https://via.placeholder.com/60x80'}" class="img-fluid rounded" style="width:60px;height:80px;object-fit:cover"></td>
-<td><a href="book.html?id=${i}">${escapeHtml(b.title || '-')}</a></td>
+<td><img src="${b.img || 'https://img.freepik.com/free-vector/red-text-book-closed-icon_18591-82397.jpg?semt=ais_hybrid&w=740&q=80'}" class="img-fluid rounded" style="width:85%;height:80px;object-fit:cover"></td>
+<td><a href="book.html?id=${b.id}">${escapeHtml(b.name || '-')}</a></td>
 <td>${escapeHtml(b.author || '-')}</td>
-<td>${escapeHtml(b.year || '-')}</td>
-<td>${escapeHtml(b.pages || '-')}</td>
-<td>${escapeHtml(b.category || '-')}</td>
+<td>${escapeHtml(b.publication_year || '-')}</td>
+<td>${escapeHtml(b.pages_total|| '-')}</td>
+<td>${escapeHtml(b.pages_read|| '-')}</td>
+<td>${escapeHtml(categories.find(cat=>cat.id==b.category_id).name || '-')}</td>
 <td>${escapeHtml(b.status || '-')}</td>
-<td>${escapeHtml(b.rating || '-')}</td>
+ 
 <td>
-  <a href="book.html?id=${i}" class="btn btn-sm btn-info mb-1">تفاصيل</a>
-  <button class="btn btn-danger btn-sm" onclick="deleteBook(${i})">حذف</button>
+  <a href="book.html?id=${b.id}" class="btn btn-sm btn-info  ">تفاصيل</a>
+  <button class="btn btn-danger btn-sm" onclick="deleteBook(${b.id})">حذف</button>
+</td>
+
+<td>
+  <a href="quote.html?id=${b.id}" class="btn btn-sm btn-secondary  ">اقتباس</a>
+  <a href="rating.html?id=${b.id}" class="btn btn-warning btn-sm" ">تقييم</a>
 </td>
 `;
             table.appendChild(tr);
@@ -91,153 +139,283 @@ function renderBooks() {
     renderStats();
 }
 
-function initAdd() {
-    const quoteInput = document.getElementById('quoteInput');
-    const addQuoteBtn = document.getElementById('addQuoteBtn');
-    const quotesList = document.getElementById('quotesList');
-    let quotes = [];
+var quotes 
+var rating
 
-    addQuoteBtn.addEventListener('click', () => {
-        const v = quoteInput.value.trim();
-        if (!v) return;
-        quotes.push(v);
-        const li = document.createElement('li');
-        li.className = 'list-group-item d-flex justify-content-between align-items-start';
-        li.innerHTML = `<div>${escapeHtml(v)}</div><button class="btn btn-sm btn-outline-danger">حذف</button>`;
-        li.querySelector('button').onclick = () => { quotes = quotes.filter(q => q !== v); li.remove(); };
-        quotesList.appendChild(li);
-        quoteInput.value = '';
-    });
-
-    document.getElementById('addForm').onsubmit = e => {
-        e.preventDefault();
-        const user = localStorage.getItem('currentUser');
-        const file = document.getElementById('image').files[0];
-        const reader = new FileReader();
-        reader.onload = () => {
-            const book = {
-                owner: user,
-                title: title.value,
-                author: author.value,
-                year: year.value,
-                pages: pages.value,
-                category: category.value,
-                status: status.value,
-                rating: rating.value,
-                notes: notes.value,
-                image: file ? reader.result : '',
-                quotes: quotes.slice()
-            };
-            books.push(book);
-            saveBooks();
-            window.location.href = 'index.html';
-        };
-        if (file) reader.readAsDataURL(file); else reader.onload();
-    };
+async function getRating(id) {
+    let result = await makeGetReq(`https://localhost:4000/api/rating?book_id=${id}`)
+    rating = result
 }
 
-function initBook() {
+function renderRating(data){
+ 
+    let ratingCon = document.getElementById("rating")
+
+    ratingCon.innerHTML = `
+    <div class="card-body">
+      <h5 class="card-title text-muted">التقييم</h5>
+      <p id="review" class="card-text">${data[0].review}</p>
+      <div class="m-2 d-flex justify-content-around">
+      <div id="starRating"></div>
+    <button class="btn" onclick="deleteRating(${data[0].id})">
+    <i class="bi bi-trash text-danger w-100"></i>  
+    </button>
+    </div>
+    </div>
+    `
+    const starContainer = document.getElementById("starRating");
+     
+    for (let i = 1; i <= 5; i++) {
+      const star = document.createElement("span");
+      star.classList.add("star");
+      if (i <= data[0].score) {
+        star.classList.add("filled");
+      }
+      star.innerHTML = "★"; // Unicode star
+      starContainer.appendChild(star);
+}
+
+}
+
+async function addRating(){
+    const params = new URLSearchParams(location.search);
+    const book_id = Number(params.get('id'));
+    let form = document.getElementById('addFormRating')
+    form.onsubmit = async(e)=>{
+        e.preventDefault()
+        const formData = new FormData(form)
+        let data =   Object.fromEntries(formData)
+        data.book_id = book_id
+
+        let result = await makePostReq("https://localhost:4000/api/rating",data)
+        if(result.message=="created") window.location.href = "./index.html"
+    }
+}
+
+async function deleteRating(id){
+    let response = await fetch("https://localhost:4000/api/rating",{
+        credentials:"include",
+        method:"delete",
+        body:JSON.stringify({id:id}),
+        headers:{
+            "content-type":"application/json"
+        }
+    })
+
+    let result = await response.json()
+    if(result.message=="deleted") location.reload()
+    
+}
+
+async function  getQuotes(id){
+    let result = await makeGetReq(`https://localhost:4000/api/quotes?book_id=${id}`)
+    quotes = result
+} 
+
+function renderQuotes(data){
+    let quoteUl = document.getElementById("quotesUL")
+    let text = ''
+    data.forEach(quote=>{
+       text+=`
+        <li class="list-group-item">
+      <div class="quote-text fst-italic mb-2" id="text">
+        "${quote.text}"
+      </div>
+      <div class="quote-comment text-muted mb-2" id="comment">
+        تعليقك: ${quote.comment}
+      </div>
+      <div class="d-flex justify-content-between align-items-center">       
+       <div class="text-secondary small id="page_number"">رقم الصفحة: ${quote.page_number}</div>
+        <div>
+          <a class="btn btn-sm btn-success me-2" id="editQuoteBtn"   href="updateQuote.html?id=${quote.id}&book_id=${quote.book_id}" > تعديل</a>
+          <button class="btn btn-sm btn-danger" id="deleteQuoteBtn" onclick="deleteQuote(${quote.id})">حذف</button>
+        </div>
+
+      </div>
+    </li>
+        `
+    quoteUl.innerHTML=text
+    })
+}
+
+async function deleteQuote(id) {
+    let response = await fetch("https://localhost:4000/api/quote",{
+        credentials:"include",
+        method:"delete",
+        body:JSON.stringify({id:id}),
+        headers:{
+            "content-type":"application/json"
+        }
+    })
+
+    let result = await response.json()
+    
+    if(result.message=="deleted")location.reload()
+     
+}
+
+async function addQuote(){
+    const params = new URLSearchParams(location.search);
+    const book_id = Number(params.get('id'));
+    let form = document.getElementById('addFormQuote')
+    form.onsubmit = async(e)=>{
+        e.preventDefault()
+        const formData = new FormData(form)
+        let data =   Object.fromEntries(formData)
+        data.book_id = book_id
+
+        let result = await makePostReq("https://localhost:4000/api/quote",data)
+        if(result.message=="created") window.location.href = "./index.html"
+    }
+}
+
+ 
+
+async function initBook() {
     const params = new URLSearchParams(location.search);
     const id = Number(params.get('id'));
-    if (isNaN(id) || !books[id]) { document.getElementById('bookCard').innerText = 'الكتاب غير موجود'; return; }
-    const book = books[id];
-    const user = localStorage.getItem('currentUser');
+    if (isNaN(id) ) { document.getElementById('bookCard').innerText = 'الكتاب غير موجود'; return; }
+    const book = books.find(b=>b.id==id);
+ 
+    if (book==undefined) { document.getElementById('bookCard').innerText = 'الكتاب غير موجود'; return; }
+    
 
     const card = document.getElementById('bookCard');
     card.innerHTML = `
     <div class="row g-3">
-      <div class="col-md-3 text-center">
-        <img src="${book.image || 'https://via.placeholder.com/160x220'}" class="img-fluid rounded" style="max-height:320px;object-fit:cover">
-        <div class="mt-2">${escapeHtml(book.title)}</div>
+      <div class="col-md-4 text-center">
+        <img src="${book.img || 'https://images.pexels.com/photos/674010/pexels-photo-674010.jpeg'}" class="img-fluid rounded" style="max-height:320px;object-fit:cover">
+        <div class="mt-2">${escapeHtml(book.name)}</div>
         <div class="text-muted">${escapeHtml(book.author)}</div>
+          <div id="rating" class="card mt-2" style="max-width:85%">
+     
+        </div>
       </div>
-      <div class="col-md-9">
-        <h4>${escapeHtml(book.title)}</h4>
-        <p><strong>المؤلف:</strong> ${escapeHtml(book.author)} &nbsp; <strong>السنة:</strong> ${escapeHtml(book.year)}</p>
-        <p><strong>الصفحات:</strong> ${escapeHtml(book.pages)} &nbsp; <strong>الفئة:</strong> ${escapeHtml(book.category || '-')}</p>
-        <p><strong>الحالة:</strong> ${escapeHtml(book.status)} &nbsp; <strong>التقييم:</strong> ${escapeHtml(book.rating || '-')}</p>
+      <div class="col-md-7">
+        <h4>${escapeHtml(book.name)}</h4>
+        <p><strong>المؤلف:</strong> ${escapeHtml(book.author)} &nbsp; <strong>السنة:</strong> ${escapeHtml(book.publication_year)}</p>
+        <p><strong>الصفحات:</strong> ${escapeHtml(book.pages_total)} &nbsp; <strong>الفئة:</strong> ${escapeHtml(categories.find(c=>c.id==book.category_id).name || '-')}</p>
+        <p><strong>الحالة:</strong> ${escapeHtml(book.status)}</p>
         <p><strong>ملاحظات:</strong><br>${escapeHtml(book.notes || '-')}</p>
-
+     <p><strong>وصف الكتاب:</strong><br>${escapeHtml(book.description || '-')}</p>
         <hr>
         <h5>الاقتباسات</h5>
-        <ul id="quotesUL" class="list-group mb-3"></ul>
+        <ul id="quotesUL" class="list-group mb-3">
+         
+        </ul>
 
-        <div id="quoteForm" class="input-group mb-3">
-          <input id="newQuote" class="form-control" placeholder="اكتب اقتباس واضغط إضافة">
-          <button id="saveQuoteBtn" class="btn btn-outline-secondary" type="button">إضافة اقتباس</button>
+        <div id="ownerControls">
+         <div class="mt-3">
+        <a href="edit.html?id=${book.id}" id="editBookBtn" class="btn btn-primary me-2">تعديل</a>
+        <button id="deleteBookBtn" onclick=deleteBook(${book.id}) class="btn btn-danger">حذف هذا الكتاب</button>
+      </div>
         </div>
-
-        <div id="ownerControls"></div>
       </div>
     </div>
   `;
 
-    const quotesUL = document.getElementById('quotesUL');
-    (book.quotes || []).forEach((q, idx) => {
-        const li = document.createElement('li');
-        li.className = 'list-group-item d-flex justify-content-between align-items-start';
-        li.innerHTML = `<div>${escapeHtml(q)}</div>` + (book.owner === user ? `<button class="btn btn-sm btn-outline-danger">حذف</button>` : '');
-        if (book.owner === user) {
-            li.querySelector('button').onclick = () => { book.quotes.splice(idx, 1); books[id] = book; saveBooks(); initBook(); };
-        }
-        quotesUL.appendChild(li);
-    });
+await getQuotes(book.id)
+renderQuotes(quotes)
 
-    document.getElementById('saveQuoteBtn').onclick = () => {
-        const v = document.getElementById('newQuote').value.trim();
-        if (!v) return;
-        book.quotes = book.quotes || [];
-        book.quotes.push(v);
-        books[id] = book;
-        saveBooks();
-        initBook();
-        document.getElementById('newQuote').value = '';
-    };
+await getRating(book.id)
+renderRating(rating)
+ 
 
-    if (book.owner === user) {
-        document.getElementById('ownerControls').innerHTML = `
-      <div class="mt-3">
-        <button id="editBookBtn" class="btn btn-primary me-2">تعديل</button>
-        <button id="deleteBookBtn" class="btn btn-danger">حذف هذا الكتاب</button>
-      </div>
-    `;
-        document.getElementById('deleteBookBtn').onclick = () => {
-            if (!confirm('هل تريد حذف الكتاب؟')) return;
-            books.splice(id, 1); saveBooks(); window.location.href = 'index.html';
-        };
-        document.getElementById('editBookBtn').onclick = () => {
-            const newTitle = prompt('اسم الكتاب', book.title); if (newTitle) book.title = newTitle;
-            const newAuthor = prompt('المؤلف', book.author); if (newAuthor) book.author = newAuthor;
-            const newYear = prompt('السنة', book.year); if (newYear) book.year = newYear;
-            const newPages = prompt('الصفحات', book.pages); if (newPages) book.pages = newPages;
-            const newCategory = prompt('الفئة', book.category || ''); if (newCategory !== null) book.category = newCategory;
-            const newStatus = prompt('الحالة', book.status); if (newStatus) book.status = newStatus;
-            const newRating = prompt('التقييم من 1 إلى 10', book.rating); if (newRating) book.rating = newRating;
-            const newNotes = prompt('ملاحظات', book.notes || ''); if (newNotes !== null) book.notes = newNotes;
-            books[id] = book; saveBooks(); initBook();
-        };
-    } else {
-        document.getElementById('quoteForm').style.display = 'none';
+}
+
+async function updateQuote(){
+    const params = new URLSearchParams(location.search);
+ 
+    const quote_id = Number(params.get('id'));
+    const book_id = Number(params.get('book_id'))
+    
+    await getQuotes(book_id)
+     
+    const quote = quotes.find(q=>q.id==quote_id)
+
+    let form = document.getElementById('updateFormQuote')
+    
+    document.getElementById('text').value = `${quote.text}`
+    document.getElementById('page_number').value = `${quote.page_number}`
+    document.getElementById('comment').value = `${quote.comment}`
+   
+
+    form.onsubmit = async(e)=>{
+        e.preventDefault()
+        const formData = new FormData(form)
+        let data =   Object.fromEntries(formData)
+         
+        data.id = quote_id
+
+        let response = await makePutReq("https://localhost:4000/api/quote",data)
+        
+        if(response.message=="updated") window.location.href = "./index.html"
     }
 }
 
-function deleteBook(i) {
+
+function deleteBook(book_id) {
     if (!confirm('هل تريد حذف الكتاب؟')) return;
-    books.splice(i, 1); saveBooks(); renderBooks();
+    fetch("https://localhost:4000/api/book",{
+        method:"delete",
+        credentials:"include",
+        body:JSON.stringify({id:book_id}),
+        headers:{
+            'Content-Type':'application/json'
+        }
+
+    }).then(async response => {
+    const data = await response.json();
+    if(data.message=="deleted") location.reload()
+    else alert(data.message)
+    
+  })
+  .catch(error => console.error(error));
 }
 
 function renderStats() {
-    const user = localStorage.getItem('currentUser');
-    const myBooks = books.filter(b => b.owner === user);
-    const total = myBooks.length;
-    const completed = myBooks.filter(b => b.status === 'مكتمل').length;
-    const reading = myBooks.filter(b => b.status === 'قيد القراءة').length;
-    const want = myBooks.filter(b => b.status === 'أريد قراءته').length;
-    const pages = myBooks.reduce((s, b) => s + Number(b.pages || 0), 0);
+ 
+    const total = books.length;
+    const completed = books.filter(b => b.status === 'مكتمل').length;
+    const reading = books.filter(b => b.status === 'قيد القراءة').length;
+    const want = books.filter(b => b.status === 'أريد قراءته').length;
+    const pages = books.reduce((s, b) => s + Number(b.pages || 0), 0);
     document.getElementById('stats').innerText = `إجمالي الكتب: ${total} | مكتمل: ${completed} | قيد القراءة: ${reading} | أريد قراءته: ${want} | إجمالي الصفحات: ${pages}`;
 }
 
 function escapeHtml(str) {
     if (!str) return '';
     return String(str).replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[s]);
+}
+
+function renderEdit(book){
+    loadCategories('category_id')
+    
+    for(const key in book){
+        if(key=='id'||key=='user_id') continue
+         
+        document.getElementById(`${key}`).value = book[key]
+         
+    }  
+}
+
+function editBook(){
+    const params = new URLSearchParams(location.search);
+    const id = Number(params.get('id'));
+    const book = books.find(b=>b.id==id)
+    renderEdit(book)
+
+    let form = document.getElementById("editForm")
+
+    form.onsubmit = async e=>{
+    e.preventDefault();
+    const formData = new FormData(form)
+    let data =   Object.fromEntries(formData)
+    data.user_id = JSON.parse(localStorage.getItem('user')).id
+    data.id = id
+     
+    let response = await makePutReq("https://localhost:4000/api/book",data)
+    if(response.message=="updated") window.location.href = "./index.html"
+   
+}
 }

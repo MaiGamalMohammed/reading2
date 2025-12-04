@@ -23,12 +23,12 @@
 
     <div class="container mt-4">
         <div class="card p-4 shadow-sm">
-            <h3 class="text-center mb-3">إضافة كتاب جديد</h3>
-            <form id="addForm">
+            <h3 class="text-center mb-3">تعديل الكتاب  </h3>
+            <form id="editForm">
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label">اسم الكتاب</label>
-                        <input id="title" type="text" name="name" class="form-control" required>
+                        <input id="name" type="text" name="name" class="form-control" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">اسم المؤلف</label>
@@ -36,15 +36,15 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">سنة الإصدار</label>
-                        <input id="year" type="number" name="publication_year" class="form-control" required>
+                        <input id="publication_year" type="number" name="publication_year" class="form-control" required>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">عدد الصفحات</label>
-                        <input id="pages" type="number" name="pages_total" class="form-control" required>
+                        <input id="pages_total" type="number" name="pages_total" class="form-control" required>
                     </div>
                      <div class="col-md-4">
                         <label class="form-label"> عدد الصفحات التي تم قرأتها</label>
-                        <input id="pages" type="number" name="pages_read" class="form-control" required>
+                        <input id="pages_read" type="number" name="pages_read" class="form-control" required>
                     </div>
                      <div class="col-12">
                         <label class="form-label">وصف الكتاب</label>
@@ -52,12 +52,12 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">الفئة (Category)</label>
-                        <select id="category" name="category_id" class="form-select" required>
+                        <select id="category_id" name="category_id" class="form-select" required>
                         </select>
                     </div>
                     <div class="col-md-12">
                         <label class="form-label">حالة القراءة</label>
-                        <select id="Status" name="status" class="form-select" required>
+                        <select id="status" name="status" class="form-select" required>
                             <option value="">اختر الحالة</option>
                             <option>مكتمل</option>
                             <option>قيد القراءة</option>
@@ -70,20 +70,19 @@
                     </div>
                     <div class="col-md-12">
                         <label class="form-label"> عنوان صورة الغلاف</label>
-                        <input id="image" type="text" name="img" class="form-control" >
+                        <input id="img" type="text" name="img" class="form-control" >
                     </div>
                     
 
                     <div class="col-12 text-center mt-3">
-                        <button class="btn btn-primary px-4" type="submit">إضافة</button>
+                        <button class="btn btn-success px-4" type="submit">تعديل</button>
                     </div>
-                    <p class="text-danger" id="error"></p>
                 </div>
             </form>
         </div>
     </div>
 
-    <script src="./assets/js/addBook.js"></script>
+    <script src="./assets/js/main_auth.js"></script>
 </body>
 
 </html>

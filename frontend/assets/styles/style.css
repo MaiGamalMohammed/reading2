@@ -11,3 +11,11 @@ body {
 .table img {
     border-radius: 6px;
 }
+
+  .star {
+      font-size: 2rem;
+      color: lightgray;
+    }
+    .star.filled {
+      color: gold;
+    }
