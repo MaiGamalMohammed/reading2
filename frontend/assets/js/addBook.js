@@ -33,8 +33,9 @@ form.onsubmit = async e=>{
     const formData = new FormData(form)
     let data =   Object.fromEntries(formData)
     data.user_id = JSON.parse(localStorage.getItem('user')).id
-
-     
+  data.pages_read = parseInt(data.pages_read)
+data.pages_total = parseInt(data.pages_total)
+data.publication_year = parseInt(data.publication_year)     
     let response = await fetch("https://localhost:4000/api/book",{
       method:"post",
       headers:{

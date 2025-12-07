@@ -9,7 +9,7 @@ function validateBookData(data){
 
 export async function addBookCon(req,res){
     let validate = validateBookData(req.body)
-     
+    console.log(validate)
     if(validate==true){
     let result = await addBook(req.body)
     res.status(result.code).send({message:result.message})
